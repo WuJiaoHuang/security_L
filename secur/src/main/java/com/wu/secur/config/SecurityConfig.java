@@ -1,7 +1,9 @@
 package com.wu.secur.config;
 
 
+import com.wu.secur.filter.JwtAuthenticationTokenFilter;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig{
@@ -19,7 +22,8 @@ public class SecurityConfig{
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
+    @Autowired
+    private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration){
         return configuration.getAuthenticationManager();
@@ -45,7 +49,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/user/login").anonymous().anyRequest().authenticated())
                 //开启跨域访问
                 .cors(AbstractHttpConfigurer::disable);
-
+        http.addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
         // 构建并返回安全过滤链
         return http.build();
     }
